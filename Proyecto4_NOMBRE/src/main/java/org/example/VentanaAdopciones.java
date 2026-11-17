@@ -317,22 +317,11 @@ public class VentanaAdopciones extends JFrame {
 
             Adopcion adopcion = recogerDatos();
 
-            if (adopcionDao.find(adopcion.getId()) != null) {
-
-                throw new IllegalArgumentException("Ya existe una adopción con ese ID");
-            }
-
-            // Inicializamos el seguimiento.
-            adopcion.setSeguimiento(new ArrayList<>());
-
-            // El DAO comprueba que existan el animal
-            // y el adoptante asociados.
             adopcionDao.create(adopcion);
 
             JOptionPane.showMessageDialog(this, "Adopción añadida correctamente");
 
             limpiar();
-
             listar();
 
         } catch (Exception e) {

@@ -261,20 +261,11 @@ public class VentanaAnimales extends JFrame {
 
             Animal animal = recogerDatos();
 
-            if (animalDao.find(animal.getId()) != null) {
-
-                throw new IllegalArgumentException("Ya existe un animal con ese ID");
-            }
-
-            // El animal empieza sin registros médicos.
-            animal.setHistorialMedico(new ArrayList<>());
-
             animalDao.create(animal);
 
             JOptionPane.showMessageDialog(this, "Animal añadido correctamente");
 
             limpiar();
-
             listar();
 
         } catch (Exception e) {

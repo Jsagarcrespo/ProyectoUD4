@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import java.util.Calendar;
+
 public class VentanaAdoptantes extends JFrame {
 
     private JPanel panelPrincipal;
@@ -272,20 +274,11 @@ public class VentanaAdoptantes extends JFrame {
 
             Adoptante adoptante = recogerDatos();
 
-            if (adoptanteDao.find(adoptante.getDni()) != null) {
-
-                throw new IllegalArgumentException("Ya existe un adoptante con ese DNI");
-            }
-
-            // Inicializamos el array de preferencias vacío.
-            adoptante.setPreferencias(new ArrayList<>());
-
             adoptanteDao.create(adoptante);
 
             JOptionPane.showMessageDialog(this, "Adoptante añadido correctamente");
 
             limpiar();
-
             listar();
 
         } catch (Exception e) {
@@ -541,8 +534,41 @@ public class VentanaAdoptantes extends JFrame {
 
             Adoptante adoptante = obtenerAdoptante();
 
-            // Buscamos las adopciones por el DNI del adoptante.
-            List<Adopcion> adopciones = adopcionDao.buscarPorAdoptante(adoptante.getDni());
+            String inicio = JOptionPane.showInputDialog(this, "Introduce fecha inicial (dd/MM/yyyy)");
+
+            if (inicio == null) {
+                return;
+            }
+
+            String fin = JOptionPane.showInputDialog(this, "Introduce fecha final (dd/MM/yyyy)");
+
+            if (fin == null) {
+                return;
+            }
+
+            if (!inicio.matches("\\d{2}/\\d{2}/\\d{4}") || !fin.matches("\\d{2}/\\d{2}/\\d{4}")) {
+
+                throw new IllegalArgumentException("Formato de fecha incorrecto");
+            }
+
+            Date desde = formato.parse(inicio);
+            Date hasta = formato.parse(fin);
+
+            if (desde.after(hasta)) {
+
+                throw new IllegalArgumentException("Intervalo incorrecto");
+            }
+
+// INCLUIR TODO EL ULTIMO DIA
+            Calendar calendario = Calendar.getInstance();
+
+            calendario.setTime(hasta);
+            calendario.add(Calendar.DATE, 1);
+            calendario.add(Calendar.MILLISECOND, -1);
+
+            hasta = calendario.getTime();
+
+            List<Adopcion> adopciones = adopcionDao.buscarPorAdoptanteYFecha(adoptante.getDni(), desde, hasta);
 
             if (adopciones.isEmpty()) {
 

@@ -20,8 +20,22 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class Estadisticas {
+
+    private static void exportarEstadisticas(Document datos) throws IOException {
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
+
+        new File("ficheros").mkdirs();
+
+        try (FileWriter writer = new FileWriter("ficheros/estadisticas.json", StandardCharsets.UTF_8)) {
+
+            gson.toJson(datos, writer);
+        }
+    }
 
     public static void mostrarEstadisticas(MongoDatabase db) {
 
@@ -228,18 +242,10 @@ public class Estadisticas {
 
             if (opcion == JOptionPane.YES_OPTION) {
 
-                Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
-
-                new File("ficheros").mkdirs();
-
-                try (FileWriter writer = new FileWriter("ficheros/estadisticas.json")) {
-
-                    gson.toJson(datos, writer);
-                }
+                exportarEstadisticas(datos);
 
                 JOptionPane.showMessageDialog(null, "Estadisticas exportadas correctamente");
             }
-
         } catch (Exception e) {
 
             JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());

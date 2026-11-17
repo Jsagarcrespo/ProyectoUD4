@@ -4,6 +4,7 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.example.Idao.IAdopcionDao;
 import org.example.modelos.Adopcion;
+import org.example.modelos.Animal;
 
 import java.util.Date;
 import java.util.List;
@@ -42,17 +43,29 @@ public class AdopcionDao extends dao<Adopcion> implements IAdopcionDao {
         AnimalDao animalDao = new AnimalDao(db);
         AdoptanteDao adoptanteDao = new AdoptanteDao(db);
 
-        // Comprobamos que el animal existe.
-        if (animalDao.find(adopcion.getIdAnimal()) == null) {
+        Animal animal = animalDao.find(adopcion.getIdAnimal());
+
+        if (animal == null) {
 
             throw new IllegalArgumentException("El animal no existe");
         }
 
-        // Comprobamos que el adoptante existe.
         if (adoptanteDao.find(adopcion.getDniAdoptante()) == null) {
 
             throw new IllegalArgumentException("El adoptante no existe");
         }
+
+        if (adopcion.getFechaSolicitud().before(animal.getFechaIngreso())) {
+
+            throw new IllegalArgumentException("La solicitud no puede ser anterior al ingreso del animal");
+        }
+    }
+
+    public List<Adopcion> buscarPorAdoptanteYFecha(String dni, Date desde, Date hasta) {
+
+        Document filtro = new Document("dniAdoptante", dni).append("fechaSolicitud", new Document("$gte", desde).append("$lte", hasta));
+
+        return buscar(filtro);
     }
 
     // COMPROBAR SI EXISTE OTRA ADOPCION APROBADA

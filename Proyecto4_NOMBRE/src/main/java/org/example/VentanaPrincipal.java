@@ -33,12 +33,6 @@ public class VentanaPrincipal extends JFrame {
     // CONSTRUCTOR
     public VentanaPrincipal() {
 
-        conexion = new DatabaseConnection();
-        db = conexion.getDatabase();
-
-        GestionIndices.crearIndices(db);
-
-        cargarDatosRefugio();
 
         setTitle("Gestion de refugio de animales");
         setContentPane(panelPrincipal);
@@ -51,6 +45,13 @@ public class VentanaPrincipal extends JFrame {
         // CONEXION A MONGODB
         conexion = new DatabaseConnection();
         db = conexion.getDatabase();
+
+        try {
+            GestionIndices.crearIndices(db);
+        } catch (MongoException e) {
+            conexion.close();
+            throw e;
+        }
 
         cargarDatosRefugio();
 
@@ -207,9 +208,5 @@ public class VentanaPrincipal extends JFrame {
         }
     }
 
-    // METODO TEMPORAL
-    private void mostrarPendiente(String apartado) {
 
-        JOptionPane.showMessageDialog(this, apartado + ": ventana pendiente de implementar");
-    }
 }

@@ -32,4 +32,6 @@ public interface IAdopcionDao {
     List<Adopcion> buscarPorFecha(Date desde, Date hasta);
 
     List<Adopcion> buscarPorEstado(String estado);
+
+    List<Adopcion> buscarPorAdoptanteYFecha(String dni, Date desde, Date hasta);
 }

@@ -1,5 +1,8 @@
 package org.example;
 
+import com.mongodb.MongoException;
+
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 public class App {
@@ -11,9 +14,15 @@ public class App {
             @Override
             public void run() {
 
-                VentanaPrincipal ventana = new VentanaPrincipal();
+                try {
 
-                ventana.setVisible(true);
+                    VentanaPrincipal ventana = new VentanaPrincipal();
+                    ventana.setVisible(true);
+
+                } catch (MongoException e) {
+
+                    JOptionPane.showMessageDialog(null, "No se puede conectar con MongoDB. " + "Comprueba que Docker está iniciado.");
+                }
             }
         });
     }

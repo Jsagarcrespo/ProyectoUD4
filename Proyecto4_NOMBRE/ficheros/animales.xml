@@ -1,0 +1,25 @@
+<Animales>
+  <Animal>
+    <id>1</id>
+    <nombre>Michi</nombre>
+    <especie>Gato</especie>
+    <raza>Miau</raza>
+    <edad>2</edad>
+    <sexo>M</sexo>
+    <descripcion>Gato Miau</descripcion>
+    <fechaIngreso>2024-06-21 22:00:00.0 UTC</fechaIngreso>
+    <estado>disponible</estado>
+    <historialMedico>
+      <org.bson.Document>
+        <entry>
+          <string>fecha</string>
+          <date>2026-11-17 18:50:30.89 UTC</date>
+        </entry>
+        <entry>
+          <string>descripcion</string>
+          <string>Malito</string>
+        </entry>
+      </org.bson.Document>
+    </historialMedico>
+  </Animal>
+</Animales>

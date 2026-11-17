@@ -7,6 +7,8 @@ import org.example.ExportarXml;
 
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 
@@ -35,11 +37,32 @@ public class VentanaExportar extends JFrame {
         coleccionComboBox.addItem("adoptantes");
         coleccionComboBox.addItem("adopciones");
 
-        xmlButton.addActionListener(e -> exportar("xml"));
+        xmlButton.addActionListener(new ActionListener() {
 
-        jsonButton.addActionListener(e -> exportar("json"));
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        cerrarButton.addActionListener(e -> dispose());
+                exportar("xml");
+            }
+        });
+
+        jsonButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                exportar("json");
+            }
+        });
+
+        cerrarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                dispose();
+            }
+        });
     }
 
     // EXPORTAR DATOS

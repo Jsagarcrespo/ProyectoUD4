@@ -1,12 +1,16 @@
 package org.example;
 
+import com.mongodb.MongoException;
 import com.mongodb.client.MongoDatabase;
 import org.example.dao.RefugioDao;
 import org.example.modelos.Refugio;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 
 public class VentanaPrincipal extends JFrame {
 
@@ -25,8 +29,16 @@ public class VentanaPrincipal extends JFrame {
     private DatabaseConnection conexion;
     private MongoDatabase db;
 
+
     // CONSTRUCTOR
     public VentanaPrincipal() {
+
+        conexion = new DatabaseConnection();
+        db = conexion.getDatabase();
+
+        GestionIndices.crearIndices(db);
+
+        cargarDatosRefugio();
 
         setTitle("Gestion de refugio de animales");
         setContentPane(panelPrincipal);
@@ -43,62 +55,122 @@ public class VentanaPrincipal extends JFrame {
         cargarDatosRefugio();
 
         // ANIMALES
-        animalesButton.addActionListener(e -> {
+        animalesButton.addActionListener(new ActionListener() {
 
-            VentanaAnimales ventana = new VentanaAnimales(db);
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-            ventana.setVisible(true);
+                VentanaAnimales ventana = new VentanaAnimales(db);
+
+                ventana.setVisible(true);
+            }
         });
 
         // ADOPTANTES
-        adoptantesButton.addActionListener(e -> {
+        adoptantesButton.addActionListener(new ActionListener() {
 
-            VentanaAdoptantes ventana = new VentanaAdoptantes(db);
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-            ventana.setVisible(true);
+                VentanaAdoptantes ventana = new VentanaAdoptantes(db);
+
+                ventana.setVisible(true);
+            }
         });
 
         // ADOPCIONES
-        adopcionesButton.addActionListener(e -> {
+        adopcionesButton.addActionListener(new ActionListener() {
 
-            VentanaAdopciones ventana = new VentanaAdopciones(db);
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-            ventana.setVisible(true);
+                VentanaAdopciones ventana = new VentanaAdopciones(db);
+
+                ventana.setVisible(true);
+            }
         });
 
         // REFUGIO
-        refugioButton.addActionListener(e -> {
+        refugioButton.addActionListener(new ActionListener() {
 
-            VentanaRefugio ventana = new VentanaRefugio(db);
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-            ventana.addWindowListener(new WindowAdapter() {
+                VentanaRefugio ventana = new VentanaRefugio(db);
 
-                @Override
-                public void windowClosed(WindowEvent evento) {
+                ventana.addWindowListener(new WindowAdapter() {
 
-                    cargarDatosRefugio();
-                }
-            });
+                    @Override
+                    public void windowClosed(WindowEvent evento) {
 
-            ventana.setVisible(true);
+                        cargarDatosRefugio();
+                    }
+                });
+
+                ventana.setVisible(true);
+            }
         });
 
         // EXPORTAR
-        exportarButton.addActionListener(e -> {
+        exportarButton.addActionListener(new ActionListener() {
 
-            VentanaExportar ventana = new VentanaExportar(db);
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-            ventana.setVisible(true);
+                VentanaExportar ventana = new VentanaExportar(db);
+
+                ventana.setVisible(true);
+            }
         });
 
         // METADATOS
-        metadatosButton.addActionListener(e -> mostrarPendiente("Metadatos"));
+        metadatosButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                try {
+
+                    String datos = GestionMetadatos.obtenerMetadatos(db);
+
+                    JTextArea texto = new JTextArea(datos, 20, 55);
+
+                    texto.setEditable(false);
+
+                    JScrollPane scroll = new JScrollPane(texto);
+
+                    JOptionPane.showMessageDialog(VentanaPrincipal.this, scroll, "Metadatos de MongoDB", JOptionPane.INFORMATION_MESSAGE);
+
+                    GestionMetadatos.exportar(datos);
+
+                    JOptionPane.showMessageDialog(VentanaPrincipal.this, "Metadatos guardados en ficheros/Metadatos.txt");
+
+                } catch (MongoException | IOException ex) {
+
+                    JOptionPane.showMessageDialog(VentanaPrincipal.this, "Error al obtener metadatos: " + ex.getMessage());
+                }
+            }
+        });
 
         // ESTADISTICAS
-        estadisticasButton.addActionListener(e -> mostrarPendiente("Estadisticas"));
+        estadisticasButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                Estadisticas.mostrarEstadisticas(db);
+            }
+        });
 
         // SALIR
-        salirButton.addActionListener(e -> dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
+        salirButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                dispatchEvent(new WindowEvent(VentanaPrincipal.this, WindowEvent.WINDOW_CLOSING));
+            }
+        });
 
         // CERRAR CONEXION
         addWindowListener(new WindowAdapter() {

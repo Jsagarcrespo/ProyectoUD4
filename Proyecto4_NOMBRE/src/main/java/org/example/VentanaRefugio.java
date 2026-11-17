@@ -5,6 +5,8 @@ import org.example.dao.RefugioDao;
 import org.example.modelos.Refugio;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -36,9 +38,23 @@ public class VentanaRefugio extends JFrame {
 
         cargarDatos();
 
-        guardarButton.addActionListener(e -> guardar());
+        guardarButton.addActionListener(new ActionListener() {
 
-        cerrarButton.addActionListener(e -> dispose());
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                guardar();
+            }
+        });
+
+        cerrarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                dispose();
+            }
+        });
     }
 
     // CARGAR LOS DATOS DEL REFUGIO

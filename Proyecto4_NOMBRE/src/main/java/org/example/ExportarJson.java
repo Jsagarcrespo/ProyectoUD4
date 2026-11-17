@@ -34,7 +34,11 @@ public class ExportarJson {
         Type tipo = new TypeToken<List<Animal>>() {
         }.getType();
 
-        guardar(lista, tipo, "animales");
+        new File("ficheros").mkdirs();
+
+        try (FileWriter writer = new FileWriter("ficheros/animales.json", StandardCharsets.UTF_8)) {
+            gson.toJson(lista, tipo, writer);
+        }
     }
 
     // EXPORTAR ADOPTANTES
@@ -47,7 +51,11 @@ public class ExportarJson {
         Type tipo = new TypeToken<List<Adoptante>>() {
         }.getType();
 
-        guardar(lista, tipo, "adoptantes");
+        new File("ficheros").mkdirs();
+
+        try (FileWriter writer = new FileWriter("ficheros/adoptantes.json", StandardCharsets.UTF_8)) {
+            gson.toJson(lista, tipo, writer);
+        }
     }
 
     // EXPORTAR ADOPCIONES
@@ -60,18 +68,9 @@ public class ExportarJson {
         Type tipo = new TypeToken<List<Adopcion>>() {
         }.getType();
 
-        guardar(lista, tipo, "adopciones");
-    }
+        new File("ficheros").mkdirs();
 
-    // GUARDAR FICHERO JSON
-    private static void guardar(List<?> lista, Type tipo, String nombre) throws IOException {
-
-        File carpeta = new File("ficheros");
-
-        carpeta.mkdirs();
-
-        try (FileWriter writer = new FileWriter("ficheros/" + nombre + ".json", StandardCharsets.UTF_8)) {
-
+        try (FileWriter writer = new FileWriter("ficheros/adopciones.json", StandardCharsets.UTF_8)) {
             gson.toJson(lista, tipo, writer);
         }
     }

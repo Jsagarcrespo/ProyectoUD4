@@ -1,0 +1,18 @@
+2. Exportar la base de datos
+Suponiendo que el contenedor se llama mongodb:
+docker exec mongodb mongodump --db refugio --archive=/tmp/refugio.archive --gzip
+
+
+3. Copiar el fichero a tu ordenador
+docker cp mongodb:/tmp/refugio.archive ./refugio.archive
+
+
+Ya tienes una copia de seguridad completa de tu base de datos.
+
+4. Restaurar la base de datos
+Cuando el profesor quiera probar tu proyecto en otro ordenador:
+
+docker cp refugio.archive mongodb:/tmp/refugio.archive
+
+
+docker exec mongodb mongorestore --archive=/tmp/refugio.archive --gzip

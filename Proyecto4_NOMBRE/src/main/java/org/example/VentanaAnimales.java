@@ -6,6 +6,10 @@ import org.example.dao.AnimalDao;
 import org.example.modelos.Animal;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.table.DefaultTableModel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -75,30 +79,97 @@ public class VentanaAnimales extends JFrame {
 
         listar();
 
-        anadirButton.addActionListener(e -> anadir());
+        anadirButton.addActionListener(new ActionListener() {
 
-        modificarButton.addActionListener(e -> modificar());
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        eliminarButton.addActionListener(e -> eliminar());
+                anadir();
+            }
+        });
 
-        limpiarButton.addActionListener(e -> limpiar());
+        modificarButton.addActionListener(new ActionListener() {
 
-        buscarButton.addActionListener(e -> buscar());
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        listarButton.addActionListener(e -> listar());
+                modificar();
+            }
+        });
 
-        historialButton.addActionListener(e -> verHistorial());
+        eliminarButton.addActionListener(new ActionListener() {
 
-        registroButton.addActionListener(e -> anadirRegistroMedico());
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        cerrarButton.addActionListener(e -> dispose());
+                eliminar();
+            }
+        });
+
+        limpiarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                limpiar();
+            }
+        });
+
+        buscarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                buscar();
+            }
+        });
+
+        listarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                listar();
+            }
+        });
+
+        historialButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                verHistorial();
+            }
+        });
+
+        registroButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                anadirRegistroMedico();
+            }
+        });
+
+        cerrarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                dispose();
+            }
+        });
 
         // Al seleccionar una fila cargamos los datos del animal.
-        tablaAnimales.getSelectionModel().addListSelectionListener(e -> {
+        tablaAnimales.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 
-            if (!e.getValueIsAdjusting()) {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
 
-                seleccionarAnimal();
+                if (!e.getValueIsAdjusting()) {
+
+                    seleccionarAnimal();
+                }
             }
         });
     }

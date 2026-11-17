@@ -10,6 +10,10 @@ import org.example.modelos.Adoptante;
 import org.example.modelos.Animal;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.table.DefaultTableModel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -83,31 +87,105 @@ public class VentanaAdopciones extends JFrame {
 
         listar();
 
-        anadirButton.addActionListener(e -> anadir());
+        anadirButton.addActionListener(new ActionListener() {
 
-        modificarButton.addActionListener(e -> modificar());
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        eliminarButton.addActionListener(e -> eliminar());
+                anadir();
+            }
+        });
 
-        limpiarButton.addActionListener(e -> limpiar());
+        modificarButton.addActionListener(new ActionListener() {
 
-        listarButton.addActionListener(e -> listar());
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        buscarButton.addActionListener(e -> buscar());
+                modificar();
+            }
+        });
 
-        asociadosButton.addActionListener(e -> consultarAsociados());
+        eliminarButton.addActionListener(new ActionListener() {
 
-        seguimientoButton.addActionListener(e -> verSeguimiento());
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        registroButton.addActionListener(e -> anadirSeguimiento());
+                eliminar();
+            }
+        });
 
-        cerrarButton.addActionListener(e -> dispose());
+        limpiarButton.addActionListener(new ActionListener() {
 
-        tablaAdopciones.getSelectionModel().addListSelectionListener(e -> {
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-            if (!e.getValueIsAdjusting()) {
+                limpiar();
+            }
+        });
 
-                seleccionarAdopcion();
+        listarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                listar();
+            }
+        });
+
+        buscarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                buscar();
+            }
+        });
+
+        asociadosButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                consultarAsociados();
+            }
+        });
+
+        seguimientoButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                verSeguimiento();
+            }
+        });
+
+        registroButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                anadirSeguimiento();
+            }
+        });
+
+        cerrarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                dispose();
+            }
+        });
+
+        tablaAdopciones.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+
+                if (!e.getValueIsAdjusting()) {
+
+                    seleccionarAdopcion();
+                }
             }
         });
     }

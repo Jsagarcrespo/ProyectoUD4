@@ -17,46 +17,19 @@ import org.example.modelos.Adopcion;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
 
 public class ExportarXml {
-
-    // LISTA DE ANIMALES
-    private static class ListaAnimales {
-
-        private List<Animal> lista;
-
-        public ListaAnimales(List<Animal> lista) {
-            this.lista = lista;
-        }
-    }
-
-    // LISTA DE ADOPTANTES
-    private static class ListaAdoptantes {
-
-        private List<Adoptante> lista;
-
-        public ListaAdoptantes(List<Adoptante> lista) {
-            this.lista = lista;
-        }
-    }
-
-    // LISTA DE ADOPCIONES
-    private static class ListaAdopciones {
-
-        private List<Adopcion> lista;
-
-        public ListaAdopciones(List<Adopcion> lista) {
-            this.lista = lista;
-        }
-    }
 
     // EXPORTAR ANIMALES
     public static void exportarAnimales(MongoDatabase db) throws IOException {
 
         AnimalDao animalDao = new AnimalDao(db);
 
-        ListaAnimales lista = new ListaAnimales(animalDao.listar());
+        ListaAnimales lista = new ListaAnimales();
+
+        for (Animal animal : animalDao.listar()) {
+            lista.add(animal);
+        }
 
         XStream xstream = new XStream();
 
@@ -80,7 +53,11 @@ public class ExportarXml {
 
         AdoptanteDao adoptanteDao = new AdoptanteDao(db);
 
-        ListaAdoptantes lista = new ListaAdoptantes(adoptanteDao.listar());
+        ListaAdoptantes lista = new ListaAdoptantes();
+
+        for (Adoptante adoptante : adoptanteDao.listar()) {
+            lista.add(adoptante);
+        }
 
         XStream xstream = new XStream();
 
@@ -102,7 +79,11 @@ public class ExportarXml {
 
         AdopcionDao adopcionDao = new AdopcionDao(db);
 
-        ListaAdopciones lista = new ListaAdopciones(adopcionDao.listar());
+        ListaAdopciones lista = new ListaAdopciones();
+
+        for (Adopcion adopcion : adopcionDao.listar()) {
+            lista.add(adopcion);
+        }
 
         XStream xstream = new XStream();
 

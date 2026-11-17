@@ -7,6 +7,10 @@ import org.example.modelos.Adoptante;
 import org.example.modelos.Adopcion;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.table.DefaultTableModel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,32 +73,106 @@ public class VentanaAdoptantes extends JFrame {
 
         listar();
 
-        anadirButton.addActionListener(e -> anadir());
+        anadirButton.addActionListener(new ActionListener() {
 
-        modificarButton.addActionListener(e -> modificar());
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        eliminarButton.addActionListener(e -> eliminar());
+                anadir();
+            }
+        });
 
-        limpiarButton.addActionListener(e -> limpiar());
+        modificarButton.addActionListener(new ActionListener() {
 
-        listarButton.addActionListener(e -> listar());
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        buscarButton.addActionListener(e -> buscar());
+                modificar();
+            }
+        });
 
-        anadirPreferenciaButton.addActionListener(e -> anadirPreferencia());
+        eliminarButton.addActionListener(new ActionListener() {
 
-        eliminarPreferenciaButton.addActionListener(e -> eliminarPreferencia());
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-        adopcionesButton.addActionListener(e -> consultarAdopciones());
+                eliminar();
+            }
+        });
 
-        cerrarButton.addActionListener(e -> dispose());
+        limpiarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                limpiar();
+            }
+        });
+
+        listarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                listar();
+            }
+        });
+
+        buscarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                buscar();
+            }
+        });
+
+        anadirPreferenciaButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                anadirPreferencia();
+            }
+        });
+
+        eliminarPreferenciaButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                eliminarPreferencia();
+            }
+        });
+
+        adopcionesButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                consultarAdopciones();
+            }
+        });
+
+        cerrarButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                dispose();
+            }
+        });
 
         // Cargamos los datos al seleccionar un adoptante.
-        tablaAdoptantes.getSelectionModel().addListSelectionListener(e -> {
+        tablaAdoptantes.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 
-            if (!e.getValueIsAdjusting()) {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
 
-                seleccionarAdoptante();
+                if (!e.getValueIsAdjusting()) {
+
+                    seleccionarAdoptante();
+                }
             }
         });
     }

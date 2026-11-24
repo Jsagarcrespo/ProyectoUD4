@@ -156,6 +156,18 @@ public class AdopcionDao extends dao<Adopcion> implements IAdopcionDao {
 
             throw new IllegalArgumentException("La adopcion no existe");
         }
+        if (!anterior.getSeguimiento().isEmpty()) {
+
+            if (!"aprobada".equals(adopcion.getEstado())) {
+
+                throw new IllegalArgumentException("No puedes cambiar el estado de una adopcion con seguimiento");
+            }
+
+            if (anterior.getIdAnimal() != adopcion.getIdAnimal() || !anterior.getDniAdoptante().equals(adopcion.getDniAdoptante())) {
+
+                throw new IllegalArgumentException("No puedes cambiar el animal o adoptante de una adopcion con seguimiento");
+            }
+        }
 
         Document cambios = new Document("$set", prepararDatos(adopcion));
 

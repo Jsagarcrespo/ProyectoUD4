@@ -56,6 +56,22 @@ public class AnimalDao extends dao<Animal> implements IAnimalDao {
         }
     }
 
+    // COMPROBAR LA FECHA DE INGRESO ANTES DE MODIFICAR EL ANIMAL
+    private void comprobarFechaIngreso(Animal animal) {
+
+        // Buscamos alguna solicitud anterior a la nueva fecha de ingreso.
+        // $lt significa menor que. Una solicitud del mismo dia es valida.
+        Document filtro = new Document("idAnimal", animal.getId())
+                .append("fechaSolicitud", new Document("$lt", animal.getFechaIngreso()));
+
+        Document adopcion = db.getCollection("adopciones").find(filtro).first();
+
+        if (adopcion != null) {
+
+            throw new IllegalArgumentException("La fecha de ingreso no puede ser posterior a una solicitud de adopcion del animal");
+        }
+    }
+
     // AÑADIR ANIMAL
     @Override
     public Animal create(Animal animal) {
@@ -85,6 +101,8 @@ public class AnimalDao extends dao<Animal> implements IAnimalDao {
         animal.validar();
 
         comprobarEstadoAnimal(animal);
+
+        comprobarFechaIngreso(animal);
 
         Document cambios = new Document("$set", prepararDatos(animal));
 

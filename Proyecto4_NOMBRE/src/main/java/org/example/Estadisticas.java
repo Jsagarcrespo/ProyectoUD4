@@ -37,6 +37,7 @@ public class Estadisticas {
         }
     }
 
+
     public static void mostrarEstadisticas(MongoDatabase db) {
 
         try {
@@ -89,6 +90,12 @@ public class Estadisticas {
             int adoptados = 0;
             int tratamiento = 0;
 
+            // Estado actual de todos los animales, sin filtrar por fecha de ingreso.
+            int disponiblesActuales = 0;
+            int reservadosActuales = 0;
+            int adoptadosActuales = 0;
+            int tratamientoActuales = 0;
+
             int nuevosAdoptantes = 0;
 
             int solicitudes = 0;
@@ -107,6 +114,18 @@ public class Estadisticas {
 
             for (Animal animal : animales) {
 
+                // Primero contamos el estado actual de todos los animales.
+                if ("disponible".equals(animal.getEstado())) {
+                    disponiblesActuales++;
+                } else if ("reservado".equals(animal.getEstado())) {
+                    reservadosActuales++;
+                } else if ("adoptado".equals(animal.getEstado())) {
+                    adoptadosActuales++;
+                } else if ("en tratamiento".equals(animal.getEstado())) {
+                    tratamientoActuales++;
+                }
+
+                // Despues contamos solo los animales ingresados en el periodo.
                 if (entreFechas(animal.getFechaIngreso(), desde, limite)) {
 
                     ingresados++;
@@ -214,29 +233,34 @@ public class Estadisticas {
 
                     + "Desde: " + inicio + "\n" + "Hasta: " + fin + "\n\n"
 
-                    + "ANIMALES\n" + "Total registrados: " + animales.size() + "\n" + "Ingresados en el periodo: " + ingresados + "\n" + "Disponibles: " + disponibles + "\n" + "Reservados: " + reservados + "\n" + "Adoptados: " + adoptados + "\n" + "En tratamiento: " + tratamiento + "\n\n"
+                    + "ANIMALES REGISTRADOS ACTUALMENTE\n" + "Total registrados: " + animales.size() + "\n" + "Disponibles: " + disponiblesActuales + "\n" + "Reservados: " + reservadosActuales + "\n" + "Adoptados: " + adoptadosActuales + "\n" + "En tratamiento: " + tratamientoActuales + "\n\n"
+
+                    + "ANIMALES INGRESADOS EN EL PERIODO\n" + "Ingresados: " + ingresados + "\n" + "Estado actual de estos animales:\n" + "Disponibles: " + disponibles + "\n" + "Reservados: " + reservados + "\n" + "Adoptados: " + adoptados + "\n" + "En tratamiento: " + tratamiento + "\n\n"
 
                     + "ADOPTANTES\n" + "Total registrados: " + adoptantes.size() + "\n" + "Nuevos adoptantes: " + nuevosAdoptantes + "\n\n"
 
-                    + "ADOPCIONES\n" + "Solicitudes: " + solicitudes + "\n" + "Pendientes: " + pendientes + "\n" + "Aprobadas: " + aprobadas + "\n" + "Rechazadas: " + rechazadas + "\n" + "Adopciones realizadas: " + adopcionesRealizadas + "\n\n"
+                    + "SOLICITUDES REGISTRADAS EN EL PERIODO\n" + "Total solicitudes: " + solicitudes + "\n" + "Estado actual de las solicitudes:\n" + "Pendientes: " + pendientes + "\n" + "Aprobadas: " + aprobadas + "\n" + "Rechazadas: " + rechazadas + "\n\n" + "ADOPCIONES REALIZADAS EN EL PERIODO\n" + "Aprobadas con fecha de resolucion en el periodo: " + adopcionesRealizadas + "\n\n"
 
-                    + "Porcentaje aprobadas: " + redondear(porcentajeAprobadas) + "\n" + "Porcentaje rechazadas: " + redondear(porcentajeRechazadas) + "\n" + "Media de dias hasta la adopcion: " + redondear(mediaDias) + "\n\n"
+                    + "Porcentaje aprobado de solicitudes del periodo: " + redondear(porcentajeAprobadas) + "\n" + "Porcentaje rechazado de solicitudes del periodo: " + redondear(porcentajeRechazadas) + "\n" + "Media de dias hasta la adopcion: " + redondear(mediaDias) + "\n\n"
 
-                    + "ESPECIES\n";
+                    + "ESPECIES DE ANIMALES INGRESADOS EN EL PERIODO\n";
 
             for (String especie : especies.keySet()) {
 
                 texto += especie + ": " + especies.getInteger(especie) + "\n";
             }
 
-            JTextArea area = new JTextArea(texto, 25, 45);
+            texto += "\nNota: los estados son los actuales. No representan el estado historico al final del periodo.\n";
+
+            JTextArea area = new JTextArea(texto, 25, 55);
             area.setEditable(false);
 
             JOptionPane.showMessageDialog(null, new JScrollPane(area), "Estadisticas", JOptionPane.INFORMATION_MESSAGE);
 
             // EXPORTAR RESULTADOS
 
-            Document datos = new Document("desde", inicio).append("hasta", fin).append("totalAnimales", animales.size()).append("animalesIngresados", ingresados).append("disponibles", disponibles).append("reservados", reservados).append("adoptados", adoptados).append("enTratamiento", tratamiento).append("nuevosAdoptantes", nuevosAdoptantes).append("solicitudes", solicitudes).append("pendientes", pendientes).append("aprobadas", aprobadas).append("rechazadas", rechazadas).append("adopcionesRealizadas", adopcionesRealizadas).append("porcentajeAprobadas", porcentajeAprobadas).append("porcentajeRechazadas", porcentajeRechazadas).append("mediaDiasAdopcion", mediaDias).append("especies", especies);
+            // En el JSON tambien diferenciamos los datos actuales y los del periodo.
+            Document datos = new Document("desde", inicio).append("hasta", fin).append("totalAnimales", animales.size()).append("disponiblesActuales", disponiblesActuales).append("reservadosActuales", reservadosActuales).append("adoptadosActuales", adoptadosActuales).append("enTratamientoActuales", tratamientoActuales).append("animalesIngresados", ingresados).append("disponiblesIngresadosPeriodo", disponibles).append("reservadosIngresadosPeriodo", reservados).append("adoptadosIngresadosPeriodo", adoptados).append("enTratamientoIngresadosPeriodo", tratamiento).append("totalAdoptantes", adoptantes.size()).append("nuevosAdoptantes", nuevosAdoptantes).append("solicitudes", solicitudes).append("pendientes", pendientes).append("aprobadas", aprobadas).append("rechazadas", rechazadas).append("adopcionesRealizadas", adopcionesRealizadas).append("porcentajeAprobadas", porcentajeAprobadas).append("porcentajeRechazadas", porcentajeRechazadas).append("mediaDiasAdopcion", mediaDias).append("especiesIngresadasPeriodo", especies).append("nota", "Los estados son actuales, no historicos. Los porcentajes se calculan sobre las solicitudes del periodo.");
 
             int opcion = JOptionPane.showConfirmDialog(null, "¿Quieres exportar las estadisticas a JSON?", "Exportar", JOptionPane.YES_NO_OPTION);
 

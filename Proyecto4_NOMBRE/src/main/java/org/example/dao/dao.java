@@ -30,7 +30,7 @@ public abstract class dao<T> {
         // Comprobamos si el identificador ya existe.
         if (coleccion.find(new Document("_id", documento.get("_id"))).first() != null) {
 
-            throw new IllegalArgumentException("El identificador ya existe");
+            throw new IllegalArgumentException("El identificador " + documento.get("_id") + " ya existe");
         }
 
         coleccion.insertOne(documento);

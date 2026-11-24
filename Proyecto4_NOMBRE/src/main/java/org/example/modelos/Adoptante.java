@@ -115,16 +115,18 @@ public class Adoptante {
             throw new IllegalArgumentException("Los apellidos son obligatorios");
         }
 
-        if (telefono == null || telefono.isBlank()) {
-            throw new IllegalArgumentException("El telefono es obligatorio");
+        if (telefono == null || !telefono.matches("(\\+34)?[0-9]{9}")) {
+
+            throw new IllegalArgumentException("El telefono debe tener 9 cifras");
         }
 
         if (direccion == null || direccion.isBlank()) {
             throw new IllegalArgumentException("La direccion es obligatoria");
         }
 
-        if (email == null || !email.contains("@")) {
-            throw new IllegalArgumentException("Email incorrecto");
+        if (email == null || !email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) {
+
+            throw new IllegalArgumentException("El email no tiene un formato valido");
         }
 
         if (fechaRegistro == null) {

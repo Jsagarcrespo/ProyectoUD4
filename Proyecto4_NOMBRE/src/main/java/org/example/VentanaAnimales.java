@@ -6,11 +6,11 @@ import org.example.dao.AnimalDao;
 import org.example.modelos.Animal;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.table.DefaultTableModel;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -25,7 +25,7 @@ public class VentanaAnimales extends JFrame {
     private JTextField razaField;
     private JTextField edadField;
     private JTextField sexoField;
-    private JTextField descripcionField;
+    private JTextArea descripcionField;
     private JTextField fechaIngresoField;
     private JComboBox<String> estadoComboBox;
 
@@ -41,10 +41,11 @@ public class VentanaAnimales extends JFrame {
 
     private JComboBox<String> criterioComboBox;
     private JTextField buscarField;
-    private JTable tablaAnimales;
+    private JTextArea lista;
 
     private AnimalDao animalDao;
-    private DefaultTableModel modeloTabla;
+    // Guarda los registros en el mismo orden que el listado.
+    private List<Animal> registrosMostrados = new ArrayList<>();
 
     private SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy");
 
@@ -55,7 +56,7 @@ public class VentanaAnimales extends JFrame {
 
         setTitle("Gestión de animales");
         setContentPane(panelPrincipal);
-        setSize(1100, 650);
+        setSize(850, 650);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -75,7 +76,8 @@ public class VentanaAnimales extends JFrame {
         criterioComboBox.addItem("Edad");
         criterioComboBox.addItem("Estado");
 
-        prepararTabla();
+        lista.setEditable(false);
+        lista.setLineWrap(false);
 
         listar();
 
@@ -160,44 +162,22 @@ public class VentanaAnimales extends JFrame {
             }
         });
 
-        // Al seleccionar una fila cargamos los datos del animal.
-        tablaAnimales.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-
+        // Al seleccionar una línea cargamos los datos del animal.
+        // Al pulsar una línea del listado, cargamos el registro.
+        lista.addMouseListener(new MouseAdapter() {
             @Override
-            public void valueChanged(ListSelectionEvent e) {
-
-                if (!e.getValueIsAdjusting()) {
-
-                    seleccionarAnimal();
-                }
+            public void mouseClicked(MouseEvent e) {
+                seleccionarAnimal(e);
             }
         });
     }
 
-    // PREPARAR LA TABLA
-    private void prepararTabla() {
-
-        String[] columnas = {"ID", "Nombre", "Especie", "Raza", "Edad", "Sexo", "Descripción", "Fecha ingreso", "Estado"};
-
-        modeloTabla = new DefaultTableModel(columnas, 0) {
-
-            @Override
-            public boolean isCellEditable(int row, int column) {
-
-                return false;
-            }
-        };
-
-        tablaAnimales.setModel(modeloTabla);
-
-        tablaAnimales.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-    }
-
-    // MOSTRAR LOS ANIMALES EN LA TABLA
+    // MOSTRAR LOS ANIMALES EN EL LISTADO
     private void mostrarAnimales(List<Animal> animales) {
 
-        // Eliminamos las filas anteriores.
-        modeloTabla.setRowCount(0);
+        // Eliminamos los resultados anteriores.
+        registrosMostrados = new ArrayList<>(animales);
+        lista.setText("");
 
         for (Animal animal : animales) {
 
@@ -208,12 +188,24 @@ public class VentanaAnimales extends JFrame {
                 fecha = formato.format(animal.getFechaIngreso());
             }
 
-            modeloTabla.addRow(new Object[]{animal.getId(), animal.getNombre(), animal.getEspecie(), animal.getRaza(), animal.getEdad(), animal.getSexo(), animal.getDescripcion(), fecha, animal.getEstado()});
+            String texto = "ID: " + animal.getId() + " | Nombre: " + animal.getNombre()
+                    + " | Especie: " + animal.getEspecie() + " | Raza: " + animal.getRaza()
+                    + " | Edad: " + animal.getEdad() + " | Sexo: " + animal.getSexo()
+                    + " | Descripción: " + animal.getDescripcion()
+                    + " | Ingreso: " + fecha + " | Estado: " + animal.getEstado();
+
+            // Un registro ocupa una sola línea, aunque tenga saltos de línea.
+            lista.append(texto.replace('\r', ' ').replace('\n', ' ') + "\n");
         }
+        lista.setCaretPosition(0);
     }
 
     // LISTAR TODOS LOS ANIMALES
     private void listar() {
+
+        // Una nueva consulta invalida la seleccion anterior.
+        // Limpiar no borra los campos del buscador.
+        limpiar();
 
         try {
 
@@ -332,6 +324,10 @@ public class VentanaAnimales extends JFrame {
     // BUSCAR ANIMALES
     private void buscar() {
 
+        // Una nueva consulta invalida la seleccion anterior.
+        // Limpiar no borra los campos del buscador.
+        limpiar();
+
         try {
 
             String criterio = (String) criterioComboBox.getSelectedItem();
@@ -397,20 +393,32 @@ public class VentanaAnimales extends JFrame {
         }
     }
 
-    // SELECCIONAR ANIMAL DE LA TABLA
-    private void seleccionarAnimal() {
+    // SELECCIONAR ANIMAL DEL LISTADO
+    private void seleccionarAnimal(MouseEvent e) {
 
         try {
 
-            int fila = tablaAnimales.getSelectedRow();
+            // Si pulsamos debajo de los registros, no seleccionamos ninguno.
+            int altoLinea = lista.getFontMetrics(lista.getFont()).getHeight();
+            int y = e.getY() - lista.getInsets().top;
 
-            if (fila != -1) {
+            if (y < 0 || y >= altoLinea * registrosMostrados.size()) {
+                return;
+            }
 
-                int id = (int) modeloTabla.getValueAt(fila, 0);
+            int posicion = lista.viewToModel2D(e.getPoint());
+            int fila = lista.getLineOfOffset(posicion);
+
+            if (fila >= 0 && fila < registrosMostrados.size()) {
+
+                int id = registrosMostrados.get(fila).getId();
 
                 Animal animal = animalDao.find(id);
 
                 if (animal != null) {
+
+                    lista.select(lista.getLineStartOffset(fila),
+                            lista.getLineEndOffset(fila));
 
                     idField.setText(String.valueOf(animal.getId()));
                     nombreField.setText(animal.getNombre());
@@ -436,9 +444,9 @@ public class VentanaAnimales extends JFrame {
                 }
             }
 
-        } catch (Exception e) {
+        } catch (Exception ex) {
 
-            mostrarError(e);
+            mostrarError(ex);
         }
     }
 
@@ -520,7 +528,7 @@ public class VentanaAnimales extends JFrame {
     // LIMPIAR LOS CAMPOS
     private void limpiar() {
 
-        tablaAnimales.clearSelection();
+        lista.select(0, 0);
 
         idField.setEditable(true);
 
@@ -546,5 +554,123 @@ public class VentanaAnimales extends JFrame {
         }
 
         JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+
+    {
+// GUI initializer generated by IntelliJ IDEA GUI Designer
+// >>> IMPORTANT!! <<<
+// DO NOT EDIT OR ADD ANY CODE HERE!
+        $$$setupUI$$$();
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        panelPrincipal = new JPanel();
+        panelPrincipal.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(18, 4, new Insets(12, 12, 12, 12), -1, -1));
+        final JLabel label1 = new JLabel();
+        label1.setText("GESTIÓN DE ANIMALES");
+        panelPrincipal.add(label1, new com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label2 = new JLabel();
+        label2.setText("ID");
+        panelPrincipal.add(label2, new com.intellij.uiDesigner.core.GridConstraints(1, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label3 = new JLabel();
+        label3.setText("Nombre");
+        panelPrincipal.add(label3, new com.intellij.uiDesigner.core.GridConstraints(1, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        idField = new JTextField();
+        panelPrincipal.add(idField, new com.intellij.uiDesigner.core.GridConstraints(2, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        nombreField = new JTextField();
+        panelPrincipal.add(nombreField, new com.intellij.uiDesigner.core.GridConstraints(2, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label4 = new JLabel();
+        label4.setText("Especie");
+        panelPrincipal.add(label4, new com.intellij.uiDesigner.core.GridConstraints(3, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label5 = new JLabel();
+        label5.setText("Raza");
+        panelPrincipal.add(label5, new com.intellij.uiDesigner.core.GridConstraints(3, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        especieField = new JTextField();
+        panelPrincipal.add(especieField, new com.intellij.uiDesigner.core.GridConstraints(4, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        razaField = new JTextField();
+        panelPrincipal.add(razaField, new com.intellij.uiDesigner.core.GridConstraints(4, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label6 = new JLabel();
+        label6.setText("Edad");
+        panelPrincipal.add(label6, new com.intellij.uiDesigner.core.GridConstraints(5, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label7 = new JLabel();
+        label7.setText("Sexo");
+        panelPrincipal.add(label7, new com.intellij.uiDesigner.core.GridConstraints(5, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        edadField = new JTextField();
+        panelPrincipal.add(edadField, new com.intellij.uiDesigner.core.GridConstraints(6, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        sexoField = new JTextField();
+        panelPrincipal.add(sexoField, new com.intellij.uiDesigner.core.GridConstraints(6, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label8 = new JLabel();
+        label8.setText("Fecha ingreso (dd/MM/yyyy)");
+        panelPrincipal.add(label8, new com.intellij.uiDesigner.core.GridConstraints(7, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label9 = new JLabel();
+        label9.setText("Estado");
+        panelPrincipal.add(label9, new com.intellij.uiDesigner.core.GridConstraints(7, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        fechaIngresoField = new JTextField();
+        panelPrincipal.add(fechaIngresoField, new com.intellij.uiDesigner.core.GridConstraints(8, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        estadoComboBox = new JComboBox();
+        panelPrincipal.add(estadoComboBox, new com.intellij.uiDesigner.core.GridConstraints(8, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label10 = new JLabel();
+        label10.setText("Descripción");
+        panelPrincipal.add(label10, new com.intellij.uiDesigner.core.GridConstraints(9, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        anadirButton = new JButton();
+        anadirButton.setText("Añadir");
+        panelPrincipal.add(anadirButton, new com.intellij.uiDesigner.core.GridConstraints(11, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        modificarButton = new JButton();
+        modificarButton.setText("Modificar");
+        panelPrincipal.add(modificarButton, new com.intellij.uiDesigner.core.GridConstraints(11, 1, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        eliminarButton = new JButton();
+        eliminarButton.setText("Eliminar");
+        panelPrincipal.add(eliminarButton, new com.intellij.uiDesigner.core.GridConstraints(11, 2, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        limpiarButton = new JButton();
+        limpiarButton.setText("Limpiar");
+        panelPrincipal.add(limpiarButton, new com.intellij.uiDesigner.core.GridConstraints(11, 3, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label11 = new JLabel();
+        label11.setText("Buscar");
+        panelPrincipal.add(label11, new com.intellij.uiDesigner.core.GridConstraints(12, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        criterioComboBox = new JComboBox();
+        panelPrincipal.add(criterioComboBox, new com.intellij.uiDesigner.core.GridConstraints(13, 0, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        buscarField = new JTextField();
+        panelPrincipal.add(buscarField, new com.intellij.uiDesigner.core.GridConstraints(13, 1, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        buscarButton = new JButton();
+        buscarButton.setText("Buscar");
+        panelPrincipal.add(buscarButton, new com.intellij.uiDesigner.core.GridConstraints(13, 3, 1, 1, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        historialButton = new JButton();
+        historialButton.setText("Ver historial");
+        panelPrincipal.add(historialButton, new com.intellij.uiDesigner.core.GridConstraints(14, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        registroButton = new JButton();
+        registroButton.setText("Añadir registro médico");
+        panelPrincipal.add(registroButton, new com.intellij.uiDesigner.core.GridConstraints(14, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JLabel label12 = new JLabel();
+        label12.setText("Listado de animales (pulsa una línea para seleccionar)");
+        panelPrincipal.add(label12, new com.intellij.uiDesigner.core.GridConstraints(15, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panelPrincipal.add(scrollPane1, new com.intellij.uiDesigner.core.GridConstraints(16, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        lista = new JTextArea();
+        scrollPane1.setViewportView(lista);
+        listarButton = new JButton();
+        listarButton.setText("Mostrar todos");
+        panelPrincipal.add(listarButton, new com.intellij.uiDesigner.core.GridConstraints(17, 0, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        cerrarButton = new JButton();
+        cerrarButton.setText("Cerrar");
+        panelPrincipal.add(cerrarButton, new com.intellij.uiDesigner.core.GridConstraints(17, 2, 1, 2, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane2 = new JScrollPane();
+        panelPrincipal.add(scrollPane2, new com.intellij.uiDesigner.core.GridConstraints(10, 0, 1, 4, com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        descripcionField = new JTextArea();
+        scrollPane2.setViewportView(descripcionField);
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return panelPrincipal;
     }
 }
